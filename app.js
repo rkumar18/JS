@@ -92,7 +92,7 @@ app.post("/login", async (req, res) => {
 app.post("/getprofile", async (req, res) => {
   try {
     const token = req.header("authorization");
-    if (!token) return res.status(401).json({ message: "unauthorizised user" });
+    if (!token) return res.status(401).json({ message: "other user" });
     const decode = jwt.verify(token, "secretKey101");
     const user = decode.user;
     const userId = await User.findById(user.id);
