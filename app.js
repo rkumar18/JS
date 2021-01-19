@@ -3,6 +3,8 @@ const md5 = require("md5");
 var jwt = require("jsonwebtoken");
 const connect = require("./connection/connect");
 const User = require("./models/user");
+const Restaurant = require("./models/restaurant");
+const utility = require("./utility/responses");
 const app = express();
 const port = 8000;
 app.use(express.json());
@@ -39,13 +41,15 @@ app.post("/register", async (req, res) => {
       console.log(userData);
       const user = new User(userData);
       await user.save();
-      return res
-        .status(200)
-        .json({ success: true, message: "user added successsully !!" });
+      return res.status(200).json({
+        success: true,
+        message: utility.responseMessages.userAddedSuccessfully,
+      });
     } else {
-      return res
-        .status(400)
-        .json({ error: true, message: "email already exist" });
+      return res.status(400).json({
+        error: true,
+        message: utility.responseMessages.emailAlreadyExist,
+      });
     }
   } catch (error) {
     return res.status(400).json({ error: true, message: error.message });
@@ -59,10 +63,8 @@ app.post("/login", async (req, res) => {
     const isUserExist = await User.findOne({ email: email });
     if (isUserExist) {
       const enteredPassword = md5(req.body.password);
-      console.log("entered password", enteredPassword);
       const user = await User.findOne({ password: enteredPassword });
       const mainPassword = user.password;
-      console.log("main password", mainPassword);
       if (mainPassword == enteredPassword) {
         const payload = {
           user: {
@@ -70,36 +72,123 @@ app.post("/login", async (req, res) => {
           },
         };
         const token = jwt.sign(payload, "secretKey101", {
-          expiresIn: "1h",
+          expiresIn: "1y",
         });
-        console.log(token);
-        return res
-          .status(200)
-          .json({ success: true, message: "login successfully !!", token });
+        return res.status(200).json({
+          success: true,
+          message: utility.responseMessages.loginSuccess,
+          token,
+        });
       } else {
-        return res
-          .status(401)
-          .json({ success: false, message: "wrong password!!" });
+        return res.status(401).json({
+          success: false,
+          message: utility.responseMessages.wrongPassword,
+        });
       }
     } else {
-      return res.status(400).json({ error: false, message: "user not exist" });
+      return res
+        .status(400)
+        .json({ error: false, message: utility.responseMessages.notExist });
     }
   } catch (error) {
     return res.status(400).json({ error: false, message: error.message });
   }
 });
 
-app.post("/getprofile", async (req, res) => {
+app.get("/getprofile", async (req, res) => {
   try {
     const token = req.header("authorization");
-    if (!token) return res.status(401).json({ message: "other user" });
+    if (!token)
+      return res
+        .status(401)
+        .json({ message: utility.responseMessages.authTokenIsnotpresent });
     const decode = jwt.verify(token, "secretKey101");
+    //console.log(decode); --> payload data
     const user = decode.user;
-    const userId = await User.findById(user.id);
-    return res.status(200).json({ message: "user profile data", user: userId });
+    // console.log("user id", user.id); user.id==userProfile.id
+    const userProfile = await User.findById(user.id);
+    return res.status(200).json({
+      message: utility.responseMessages.userProfileData,
+      user: userProfile,
+    });
   } catch (error) {
     return res.status(400).json({ error: false, message: error.message });
   }
 });
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+app.post("/addRestaurant", async (req, res) => {
+  try {
+    const token = req.header("authorization");
+    if (!token) {
+      return res.status(400).json({
+        error: false,
+        message: utility.responseMessages.authTokenIsnotpresent,
+      });
+    }
+    const decode = jwt.verify(token, "secretKey101");
+    const user = decode.user;
+    const userProfile = await User.findById(user.id);
+    if (userProfile.id == user.id) {
+      const restaurantName = req.body.restaurantName;
+      const restaurantEmail = req.body.restaurantEmail;
+      const address = req.body.address;
+      const restaurantPhone = req.body.restaurantPhone;
+      const GSTnumber = req.body.GSTnumber;
+      const restaurantPhoto = req.body.restaurantPhoto;
+      const restaurantData = {
+        restaurantName,
+        restaurantPhoto,
+        restaurantEmail,
+        address,
+        restaurantPhone,
+        GSTnumber,
+      };
+      const isResturantExist = await Restaurant.findOne({
+        restaurantEmail: restaurantEmail,
+      });
+      if (!isResturantExist) {
+        const restaurant = new Restaurant(restaurantData);
+        await restaurant.save();
+        return res.status(200).json({
+          message: utility.responseMessages.restaurantAdded,
+        });
+      } else {
+        res.status(406).json({
+          message: utility.responseMessages.emailAlreadyExist,
+        });
+      }
+    } else {
+      res.status(401).json({
+        message: utility.responseMessages.authTokenIsnotpresent,
+      });
+    }
+  } catch (error) {
+    res.status(403).json({
+      message: error.message,
+    });
+  }
+});
+
+app.get("/getAllRestaurant", async (req, res) => {
+  try {
+    const token = req.header("authorization");
+    if (!token) {
+      return res.status(400).json({
+        error: false,
+        message: utility.responseMessages.authTokenIsnotpresent,
+      });
+    } else {
+      const allResturant = await Restaurant.find();
+      res.status(200).json({
+        message: "all Resturant",
+        allResturant,
+      });
+    }
+  } catch (error) {
+    res.status(403).json({
+      message: error.message,
+    });
+  }
+});
+
+app.listen(port, () => console.log(utility.responseMessages.runAt, port));
