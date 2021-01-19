@@ -89,16 +89,14 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.post("/home", async (req, res) => {
+app.post("/getprofile", async (req, res) => {
   try {
     const token = req.header("authorization");
     if (!token) return res.status(401).json({ message: "unauthorizised user" });
     const decode = jwt.verify(token, "secretKey101");
     const user = decode.user;
     const userId = await User.findById(user.id);
-    return res
-      .status(200)
-      .json({ message: "this is home page", user: userId.email });
+    return res.status(200).json({ message: "user profile data", user: userId });
   } catch (error) {
     return res.status(400).json({ error: false, message: error.message });
   }
