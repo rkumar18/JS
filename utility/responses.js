@@ -10,4 +10,5 @@ module.exports.responseMessages = {
   userAddedSuccessfully: "user added successfully !!",
   restaurantAdded: "restaurant Added successfully!!",
   resturantData: "Restaurant data",
+  enterResturantId: "Enter a Resturant Id"
 };

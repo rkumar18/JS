@@ -195,7 +195,7 @@ app.get("/getAllRestaurant", async (req, res) => {
 });
 
 
-app.get("getRestaurantById", async (req, res)=>{
+app.get("/getRestaurantById", async (req, res)=>{
   try {
     const token = req.header("authorization");
     const decode = jwt.verify(token, "secretKey101");
@@ -206,19 +206,24 @@ app.get("getRestaurantById", async (req, res)=>{
         error: false,
         message: utility.responseMessages.authTokenIsnotpresent,
       });
-    } else if(userProfile.id == user.id){
+    } else if(req.body.id){
+      if (userProfile.id == user.id){
       const restaurantName = await Restaurant.findById(req.body.id);
       res.status(200).json({
         message: utility.responseMessages.resturantData,
         restaurantName,
       });
-    }
-    else {
-      res.status(404).json({
-        message: utility.responseMessages.notExist
+      }
+        res.status(401).json({
+        message: utility.responseMessages.enterResturantId,
       });
     }
-  } catch (error) {
+    else {
+      res.status(401).json({
+        message: utility.responseMessages.enterResturantId,
+      });}
+    }
+   catch (error) {
     res.status(403).json({
       message: error.message,
     });
