@@ -172,16 +172,50 @@ app.post("/addRestaurant", async (req, res) => {
 app.get("/getAllRestaurant", async (req, res) => {
   try {
     const token = req.header("authorization");
+    const decode = jwt.verify(token, "secretKey101");
+    const user = decode.user;
+    const userProfile = await User.findById(user.id);
     if (!token) {
       return res.status(400).json({
         error: false,
         message: utility.responseMessages.authTokenIsnotpresent,
       });
-    } else {
-      const allResturant = await Restaurant.find();
+    } else if(userProfile.id == user.id){
+        const allResturant = await Restaurant.find();
+        res.status(200).json({
+          message: "all Resturant",
+          allResturant,
+        });
+      } 
+  } catch (error) {
+    res.status(403).json({
+      message: error.message,
+    });
+  }
+});
+
+
+app.get("getRestaurantById", async (req, res)=>{
+  try {
+    const token = req.header("authorization");
+    const decode = jwt.verify(token, "secretKey101");
+    const user = decode.user;
+    const userProfile = await User.findById(user.id);
+    if (!token) {
+      return res.status(400).json({
+        error: false,
+        message: utility.responseMessages.authTokenIsnotpresent,
+      });
+    } else if(userProfile.id == user.id){
+      const restaurantName = await Restaurant.findById(req.body.id);
       res.status(200).json({
-        message: "all Resturant",
-        allResturant,
+        message: utility.responseMessages.resturantData,
+        restaurantName,
+      });
+    }
+    else {
+      res.status(404).json({
+        message: utility.responseMessages.notExist
       });
     }
   } catch (error) {
