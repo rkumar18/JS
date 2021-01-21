@@ -6,7 +6,7 @@ const User = require("./models/user");
 const Restaurant = require("./models/restaurant");
 const utility = require("./utility/responses");
 const app = express();
-const port = 8000;
+const port = process.env.PORT || 8000;
 app.use(express.json());
 connect();
 
