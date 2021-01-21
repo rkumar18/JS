@@ -9,13 +9,6 @@ const app = express();
 const port = 8000;
 app.use(express.json());
 connect();
-app.post("/sum", (req, res) => {
-  const firstNumber = req.body.firstNumber;
-  const secondNumber = req.body.secondNumber;
-  const sum = firstNumber + secondNumber;
-  // res.json(sum)
-  res.send({ result: sum });
-});
 
 app.post("/register", async (req, res) => {
   try {
@@ -68,7 +61,7 @@ app.post("/login", async (req, res) => {
       if (mainPassword == enteredPassword) {
         const payload = {
           user: {
-            id: user.id, //mongo obj id
+            _id: user._id, //mongo obj id
           },
         };
         const token = jwt.sign(payload, "secretKey101", {
@@ -182,6 +175,28 @@ app.get("/getAllRestaurant", async (req, res) => {
       res.status(200).json({
         message: "all Resturant",
         allResturant,
+      });
+    }
+  } catch (error) {
+    res.status(403).json({
+      message: error.message,
+    });
+  }
+});
+
+app.get("/getRestaurantById", async (req, res) => {
+  try {
+    const token = req.header("authorization");
+    if (!token) {
+      return res.status(400).json({
+        error: false,
+        message: utility.responseMessages.authTokenIsnotpresent,
+      });
+    } else {
+      const resturantData = await Restaurant.findOne({ id: req.body.id });
+      res.status(200).json({
+        message: "Resturant",
+        resturantData,
       });
     }
   } catch (error) {
