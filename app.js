@@ -10,6 +10,8 @@ const port = 8000;
 app.use(express.json());
 connect();
 
+app.get("/", (req, res, next) => res.end("Hello this is heroku app"));
+
 app.post("/register", async (req, res) => {
   try {
     const firstName = req.body.firstName;
@@ -29,7 +31,7 @@ app.post("/register", async (req, res) => {
       password,
       confirmPassword,
     };
-    const isUserExist = await User.findOne({ email: email });
+    const isUserExist = await User.findOne({ email });
     if (!isUserExist) {
       console.log(userData);
       const user = new User(userData);
